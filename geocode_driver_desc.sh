@@ -21,18 +21,22 @@ geocode_to_kmz() {   # arguments: filename, cmin, cmax, cmap
   gdal_translate -of KMLSUPEROVERLAY "geo_$1.tif" "geo_$1.kmz"
 }
 
-cd merged/interferograms/20240801_20240813/ || exit
-isceintf_to_phase.py --isce_file fine.int --outfile phase.int
-isceintf_to_phase.py --isce_file filt_fine.int --outfile filt_phase.int
-mask_isce_file.py -i filt_phase.int -o filt_phase_masked.int -c filt_fine.cor -t 0.37  # implement coherence mask on phase
-geocodeGdal.py -l $latfile -L $lonfile -f phase.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
-geocodeGdal.py -l $latfile -L $lonfile -f filt_phase.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
-geocodeGdal.py -l $latfile -L $lonfile -f filt_phase_masked.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
-geocodeGdal.py -l $latfile -L $lonfile -f filt_fine.unw --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
-geocodeGdal.py -l $latfile -L $lonfile -f filt_fine.cor --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
-geocode_to_kmz filt_phase.int -3.14 3.14 rainbow  # optional
-geocode_to_kmz phase.int -3.14 3.14 rainbow  # optional
+for dir in */; do
+  (
+    cd "$dir"
+    isceintf_to_phase.py --isce_file fine.int --outfile phase.int
+    isceintf_to_phase.py --isce_file filt_fine.int --outfile filt_phase.int
+    mask_isce_file.py -i filt_phase.int -o filt_phase_masked.int -c filt_fine.cor -t 0.37  # implement coherence mask on phase
+    geocodeGdal.py -l $latfile -L $lonfile -f phase.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
+    geocodeGdal.py -l $latfile -L $lonfile -f filt_phase.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
+    geocodeGdal.py -l $latfile -L $lonfile -f filt_phase_masked.int --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
+    geocodeGdal.py -l $latfile -L $lonfile -f filt_fine.unw --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
+    geocodeGdal.py -l $latfile -L $lonfile -f filt_fine.cor --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
+    geocode_to_kmz filt_phase.int -3.14 3.14 rainbow  # optional
+    geocode_to_kmz phase.int -3.14 3.14 rainbow  # optional
 
+  )
+done
 
 # # Step 4: Geocode los.rdr file: EXECUTE from within ../../geom_reference with the same parameters as the interferograms.
 cd ../../geom_reference/ || exit
