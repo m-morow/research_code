@@ -21,6 +21,8 @@ geocode_to_kmz() {   # arguments: filename, cmin, cmax, cmap
   gdal_translate -of KMLSUPEROVERLAY "geo_$1.tif" "geo_$1.kmz"
 }
 
+parentdir="$(pwd)"
+
 for dir in */; do
   (
     cd "$dir"
@@ -34,6 +36,7 @@ for dir in */; do
     geocodeGdal.py -l $latfile -L $lonfile -f filt_fine.cor --bbox '32.5 33.4 -116.15 -115.15' -x 0.0001 -y 0.0001
     geocode_to_kmz filt_phase.int -3.14 3.14 rainbow  # optional
     geocode_to_kmz phase.int -3.14 3.14 rainbow  # optional
+    echo "$dir" >> "$parentdir/logfile.txt" #save directory name to logfile in parent directory
 
   )
 done
