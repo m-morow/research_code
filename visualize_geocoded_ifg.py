@@ -9,7 +9,7 @@ import json
 plt.rcParams["font.family"] = "Arial"
 plt.rcParams['axes.linewidth'] = 1
 
-def do_fig1(params):
+def do_fig1(params, ifg):
 
     xarray, yarray, data = isce_read_write.read_scalar_data(params['file'], verbose=False) #I suppress print functions
 
@@ -25,9 +25,14 @@ def do_fig1(params):
     plot_title = " ".join(params["file"].split('/')[-2:])
     plt.title(plot_title, fontsize=14)
 
-    outfile_from_orig = str("_".join(params["file"].replace('.', '/').split('/')[-2:])) + "_"
-    outfile = outfile_from_orig + "_".join(params["work_dir"].split('/')[-1:])
-    plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300) #json has experiment_dir also
+    if ifg:
+        outfile_from_orig = str("_".join(ifg.replace('.', '/').split('/')[-2:]))
+        outfile = "_".join(ifg.split('/')[-2:-1]) + '_' + outfile_from_orig
+        plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300)
+    else:
+        outfile_from_orig = str("_".join(params["file"].replace('.', '/').split('/')[-2:])) + "_"
+        outfile = outfile_from_orig + "_".join(params["work_dir"].split('/')[-1:])
+        plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300)
 
     return
 
@@ -69,8 +74,12 @@ def do_fig2(params):
 
 if __name__ == "__main__":
 
-    for file in list(glob.glob('./**/*.json', root_dir=os.getcwd(), recursive=True)):
-        with open(file) as f:
-            param_dict = json.load(f)
-            do_fig1(param_dict)
-            do_fig2(param_dict)
+    param_file = '/media/mtan/rocket/mtan/IF_longterm/processing/merged/params.json'
+    with open(param_file) as f:
+        params_raw = f.read()
+
+    params = json.load(params_raw)
+
+    for ifg in list(glob.glob('./*/geo_phase.int', root_dir=os.getcwd(), recursive=True)):
+        do_fig1(params)
+        do_fig2(params)
