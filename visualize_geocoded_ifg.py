@@ -10,7 +10,7 @@ plt.rcParams["font.family"] = "Arial"
 plt.rcParams['axes.linewidth'] = 1
 
 def do_fig1(params, ifg):
-
+    
     xarray, yarray, data = isce_read_write.read_scalar_data(params['file'], verbose=False) #I suppress print functions
 
     _, _, data_bbox = grid_tools.clip_array_by_bbox(xarray, yarray, data, params['extent'], verbose=False)
@@ -22,28 +22,27 @@ def do_fig1(params, ifg):
     plt.ylabel("latitude", fontsize=10)
     plt.tick_params(axis='both', which='major', labelsize=8, width=1)
 
-    plot_title = " ".join(params["file"].split('/')[-2:])
-    plt.title(plot_title, fontsize=14)
-
     if ifg:
+        plot_title = " ".join(ifg.split('/')[-2:])
         outfile_from_orig = str("_".join(ifg.replace('.', '/').split('/')[-2:]))
         outfile = "_".join(ifg.split('/')[-2:-1]) + '_' + outfile_from_orig
-        plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300)
     else:
+        plot_title = " ".join(params["file"].split('/')[-2:])
         outfile_from_orig = str("_".join(params["file"].replace('.', '/').split('/')[-2:])) + "_"
         outfile = outfile_from_orig + "_".join(params["work_dir"].split('/')[-1:])
-        plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300)
+
+    plt.title(plot_title, fontsize=14)
+    plt.savefig(os.path.join(params['work_dir'], outfile + '_A.png'), dpi=300)
 
     return
 
-def do_fig2(params):
+def do_fig2(params, ifg):
 
     xarray, yarray, data = isce_read_write.read_scalar_data(params['file'], verbose=False)
 
     _, _, data_bbox = grid_tools.clip_array_by_bbox(xarray, yarray, data, params['extent'], verbose=False)
 
     qf_shp = gp.read_file(params["qfaults_shp"])
-    #qf = qf_shp.to_crs("EPSG:4326")  # explicit WGS to EPSG?
     roads_shp = gp.read_file(params["road_shp"])
     us_border = gp.read_file(params["borders"])
     creepmeter = gp.read_file(params["creepmeters"])
@@ -62,11 +61,16 @@ def do_fig2(params):
     plt.ylabel("latitude", fontsize=10)
     plt.tick_params(axis='both', which='major', labelsize=8, width=1)
 
-    plot_title = " ".join(params["file"].split('/')[-2:])
-    plt.title(plot_title, fontsize=14)
+    if ifg:
+        plot_title = " ".join(ifg.split('/')[-2:])
+        outfile_from_orig = str("_".join(ifg.replace('.', '/').split('/')[-2:]))
+        outfile = "_".join(ifg.split('/')[-2:-1]) + '_' + outfile_from_orig
+    else:
+        plot_title = " ".join(params["file"].split('/')[-2:])
+        outfile_from_orig = str("_".join(params["file"].replace('.', '/').split('/')[-2:])) + "_"
+        outfile = outfile_from_orig + "_".join(params["work_dir"].split('/')[-1:])
 
-    outfile_from_orig = str("_".join(params["file"].replace('.', '/').split('/')[-2:])) + "_"
-    outfile = outfile_from_orig + "_".join(params["work_dir"].split('/')[-1:])
+    plt.title(plot_title, fontsize=14)
     plt.savefig(os.path.join(params['work_dir'], outfile + '_B.png'), dpi=300)
 
     return
@@ -80,6 +84,6 @@ if __name__ == "__main__":
 
     params = json.load(params_raw)
 
-    for ifg in list(glob.glob('./*/geo_phase.int', root_dir=os.getcwd(), recursive=True)):
-        do_fig1(params)
-        do_fig2(params)
+    for ifg in list(glob.glob(os.path.join(os.getcwd(), '*/geo_phase.int'), recursive=True)):
+        do_fig1(params, ifg=ifg)
+        do_fig2(params, ifg=ifg)
