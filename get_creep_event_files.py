@@ -11,3 +11,4 @@ from cmcrameri import cm
 
 plt.rcParams['axes.linewidth'] = 1
 
+if __name__ == "__main__":
