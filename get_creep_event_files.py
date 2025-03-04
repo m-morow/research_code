@@ -46,7 +46,7 @@ if __name__ == "__main__":
     
     workdir = '/media/mtan/rocket/mtan/IF_longterm/processing/merged/interferograms/'
 
-    dstdir = '/media/mtan/rocket/mtan/IF_longterm/processing/merged/interferograms/'
+    dstdir = '/media/mtan/rocket/mtan/IF_longterm/processing/merged/creep/'
 
     print("""
           source directory = {}
@@ -60,6 +60,8 @@ if __name__ == "__main__":
             path = os.path.join(workdir, date)
             for file in target_files:
                 target_file_path, new_full_path = rename_and_copy(path, file, dst_path=dstdir)
-                #shutil.copy(target_file_path, new_full_path)
+                #print(target_file_path, new_full_path) #test before running
+                #print("-----") 
+                shutil.copy(target_file_path, new_full_path)
     else:
         print('\n exiting ...')
