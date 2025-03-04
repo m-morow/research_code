@@ -40,9 +40,10 @@ if __name__ == "__main__":
                   '20230115_20230127', '20230208_20230220', '20230328_20230409', '20230409_20230421',
                   '20231217_20231229', '20240203_20240215', '20241105_20241117']
     
-    target_files = ['geo_filt_fine.cor', 'geo_filt_fine.cor.xml',
-                    'geo_phase.int', 'geo_phase.int.xml',
-                    'geo_filt_phase.int', 'geo_filt_phase.int.xml']
+    target_files = ['geo_filt_fine.unw', 'geo_filt_fine.unw.xml']
+    #target_files = ['geo_filt_fine.cor', 'geo_filt_fine.cor.xml',
+    #                'geo_phase.int', 'geo_phase.int.xml',
+    #                'geo_filt_phase.int', 'geo_filt_phase.int.xml']
     
     workdir = '/media/mtan/rocket/mtan/IF_longterm/processing/merged/interferograms/'
 
