@@ -243,4 +243,3 @@ if __name__ == "__main__":
     profile_loc = pd.read_csv(params['profiles'], header=0)
     ploc_arr = np.array(profile_loc)
 
-    for events in range(len(ploc_arr)):
