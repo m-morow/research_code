@@ -42,6 +42,12 @@ def date_string_to_datetime(dataframe, header, src_col, target_col, sorted=True)
     else:
         return df
     
+def save_pygmt(template_filepath, append_name):
+    head, tail = os.path.split(template_filepath)
+    new_file = str("_".join(tail.split('.')[:-1]))
+    outfile_path = head + '/' + new_file + append_name
+    return outfile_path
+
 def isce_to_grd(isce_file_path, units, param_file):
     """
     convert ISCE-generated .int file to .grd file. May work on other ISCE-generated files
