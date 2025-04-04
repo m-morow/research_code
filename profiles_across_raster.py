@@ -228,7 +228,9 @@ def plot_profiles_gmt(grid_file, isce_file, ploc, ploc_idx, title, outfile=True)
     )
 
     if outfile:
-       print() 
+       fig.savefig(utils.save_pygmt(grid_file, append_name="_creepProfile.png"))
+
+    fig.show() 
 
 if __name__ == "__main__":
 
@@ -243,3 +245,6 @@ if __name__ == "__main__":
     profile_loc = pd.read_csv(params['profiles'], header=0)
     ploc_arr = np.array(profile_loc)
 
+    for grd in list(glob.glob('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Data/IF_longterm/creep_event_files/*.grd')):
+        print("")
+        print("")
