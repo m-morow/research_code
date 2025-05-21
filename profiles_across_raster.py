@@ -26,13 +26,10 @@ def connect_points(ploc):
 def midpoint(x, y):
     return (x[0] + x[1])/2,  (y[0] + y[1])/2
 
-def simple_plot_profiles(ploc):
-    x, y, names = connect_points(ploc)
-    for i in range(len(x)):
-        plt.plot(x[i], y[i], c='k', linewidth=1)
-        xloc = x[i][0]
-        yloc = y[i][0]
-        plt.text(xloc, yloc, str(names[i]), size=4,
+def simple_plot_profiles(lons, lats):
+    for i in range(len(lons)):
+        plt.plot(lons[i], lats[i], c='k', linewidth=1)
+        plt.text(lons[i][0], lats[i][0], i, size=6,
                 ha="center", va="center",
                 bbox=dict(boxstyle="circle", linewidth=0.5, facecolor='white'), color='k'
                 )
@@ -75,29 +72,41 @@ def plot_profiles(params, ifg, xs, ys, labels):
 
     return
 
-def sort_and_pad(subset):
+def sort(subset):
     """
     sort profile lon/lat coordinates and add a pad to plot region around profile
 
     Parameters:
     --------
-    subset: [lon0, lon1, lat0, lat1]
+    subset: profiles array
 
     Returns:
     --------
-    xs: longitude coordinates [lonA, lonB]
-    ys: latitude coordinates [latA, latB]
-    region with pad: [lonA-pad, lonB+pad, latA-pad, latB+pad]
+    lons: longitude coordinates [lonA, lonB]
+    lats: latitude coordinates [latA, latB]
+    name: name of profile
     """
-    sorted = np.sort(subset)
-    pad = np.sqrt( (sorted[0] - sorted[1])**2 + (sorted[3] - sorted[2])**2 )
-    if subset[0] < subset[1]:
-        xs = [subset[0], subset[1]]
-        ys = [subset[2], subset[3]]
+    lons = []
+    lats = []
+    names = subset[:, 2]
+
+    if subset.shape[0] > 1:
+        for i in range(subset.shape[0]):
+            if subset[i][5] < subset[i][6]:
+                lats.append([subset[i][3], subset[i][4]])
+                lons.append([subset[i][5], subset[i][6]])
+            else:
+                lats.append([subset[i][4], subset[i][3]])
+                lons.append([subset[i][6], subset[i][5]])
     else:
-        xs = [subset[1], subset[0]]
-        ys = [subset[3], subset[2]]
-    return xs, ys, [sorted[0] - pad, sorted[1] + pad, sorted[2] - pad, sorted[3] + pad]
+        if subset[5] < subset[6]:
+            lats.append([subset[3], subset[4]])
+            lons.append([subset[5], subset[6]])
+        else:
+            lats.append([subset[4], subset[3]])
+            lons.append([subset[6], subset[5]])
+        
+    return lons, lats, names
 
 def plot_profiles_gmt(grid_file, isce_file, ploc, ploc_idx, title, outfile=True):
     fig = pygmt.Figure()
