@@ -13,15 +13,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+import os
+
 import pytensor
 import pytensor.tensor as pt
-
 import pymc as pm
-
 from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
-import pymc_espy_utils
+from pymc_espy_utils import get_los, read_intxt, do_update
 
 def do_okada(params, slip, width, dip):
     """
@@ -136,10 +136,15 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
+    wd = cwd = "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3"
+    os.chdir(wd)
+    
     inputs_orig = read_intxt("normal_fault_in.txt")
     params = PyCoulomb.configure_calc.configure_stress_calculation('my_config_normal.txt')
     disp_points = io_additionals.read_disp_points("normal_fault_disp.txt")
     data = np.loadtxt('los_data_2000.txt')
+
+    sigma = 1.0
     #########################################################
     #########################################################
 
@@ -156,6 +161,8 @@ if __name__ == "__main__":
             "likelihood", slip, width, dip, sigma, observed=data, logp=custom_dist_loglike
         )
 
+    """
     with no_grad_model:
         # Use custom number of draws to replace the HMC based defaults
         idata_no_grad = pm.sample(3000, tune=1000)
+    """
