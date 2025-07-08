@@ -122,3 +122,9 @@ def get_tiff_info(file, verbose=True):
     print("transform: ", t)
   ds.close
   return w, h, extent
+
+def read_json(file):
+    f = open(file)
+    params = json.load(f)
+    f.close()
+    return params
