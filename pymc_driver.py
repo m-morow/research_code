@@ -22,6 +22,7 @@ from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update
+from pymc_visualize import plot_stats
 
 def do_okada(params, slip, width, dip):
     """
@@ -164,4 +165,6 @@ if __name__ == "__main__":
 
     with no_grad_model:
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(100, tune=20)
+        idata_no_grad = pm.sample(10, tune=5)
+
+    plot_stats(idata_no_grad)
