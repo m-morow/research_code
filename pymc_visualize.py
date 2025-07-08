@@ -28,4 +28,5 @@ def plot_stats(pymc_model, round=3):
     az.plot_posterior(pymc_model)
     az.summary(pymc_model, round_to=round)
 
-def plot_model()
+#def plot_model():
+#    retu
