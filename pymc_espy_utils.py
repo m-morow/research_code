@@ -19,12 +19,40 @@ def get_dU(disp_points):
     return dU
 
 def get_los(disp_points):
+    """
+    Function takes in elastic_stresses_py displacement object and returns line of sight displacement
+
+    Parameters:
+    -------
+    disp_points: elastic_stresses_py displacement object
+
+    Returns:
+    --------
+    los data vector * [-1]
+    
+    """
     los = []
     for point in disp_points:
         los = np.append(los, insar_vector_functions.def3D_into_LOS(point.dE_obs, point.dN_obs, point.dU_obs, 190, 37))
     return los*-1
 
 def read_intxt(input_file, mu=30e9, _lame1=30e9):
+    """
+    Reads input file specified in elastic_stresses_py documentation and makes an input object
+
+    Parameters:
+    -------
+    input_file: textfile formatted from elastic_stresses_py documentation
+
+    mu (optional): default 30e9
+
+    _lame1 (optional): default 30e9
+
+    Returns:
+    --------
+    elastic_stresses_py input object
+    
+    """
     sources, receivers = [], []
     receiver_horiz_profile = None
     [PR1, FRIC, minlon, maxlon, zerolon, minlat, maxlat, zerolat] = io_intxt.get_general_compute_params(input_file)
@@ -50,10 +78,28 @@ def read_intxt(input_file, mu=30e9, _lame1=30e9):
                              receiver_horiz_profile=receiver_horiz_profile)
     return input_obj
 
-def do_update(default_inputs, slip, depth, dip):
+def do_update(default_inputs, slip, width, dip):
+    """
+    Update fault slip object from new slip, width, dip values
+
+    Parameters:
+    -------
+    default_inputs: input object
+
+    slip: slip [m]
+
+    width: width of rectangular slip patch (i.e. top - bottom depth) [km]
+
+    dip: dip of rectangular slip patch [degrees]
+
+    Returns:
+    --------
+    input object with modified source of slip, width, dip
+    
+    """
     internal_source = PyCoulomb.fault_slip_object.fault_slip_object.coulomb_fault_to_fault_object(default_inputs.source_object)
     internal_source[0].slip = slip
-    internal_source[0].width = depth
+    internal_source[0].width = width
     internal_source[0].dip = dip
 
     modified_source = PyCoulomb.fault_slip_object.fault_slip_object.fault_object_to_coulomb_fault(internal_source, 
