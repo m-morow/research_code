@@ -21,8 +21,7 @@ import pymc as pm
 from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update
-from utils import read_json
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 from pymc_visualize import plot_stats
 
 def do_okada(params, slip, width, dip):

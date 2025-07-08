@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+import json
 
 from elastic_stresses_py import PyCoulomb
 from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
@@ -106,3 +107,9 @@ def do_update(default_inputs, slip, width, dip):
                                                                                 zerolon_system=default_inputs.zerolon, 
                                                                                 zerolat_system=default_inputs.zerolat)
     return default_inputs.modify_inputs_object(source_object=modified_source)
+
+def read_json(file):
+    f = open(file)
+    params = json.load(f)
+    f.close()
+    return params
