@@ -136,9 +136,9 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    wd = cwd = "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3"
+    wd = "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3"
     os.chdir(wd)
-    
+
     inputs_orig = read_intxt("normal_fault_in.txt")
     params = PyCoulomb.configure_calc.configure_stress_calculation('my_config_normal.txt')
     disp_points = io_additionals.read_disp_points("normal_fault_disp.txt")
