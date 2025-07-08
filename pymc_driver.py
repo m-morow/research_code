@@ -23,8 +23,26 @@ from pytensor.graph import Apply, Op
 
 import pymc_espy_utils
 
-def do_okada(params, slip, depth, dip):
-    inputs = do_update(inputs_orig, slip[0], depth[0], dip[0])
+def do_okada(params, slip, width, dip):
+    """
+    Perform Okada dislocation of a rectangular slip patch with slip, width, dip
+
+    Parameters:
+    -------
+    params: textfile of parameters 
+
+    slip: slip [m]
+
+    width: width of rectangular slip patch (i.e. top - bottom depth) [km]
+
+    dip: dip of rectangular slip patch [degrees]
+
+    Returns:
+    --------
+    line of sight data array
+    
+    """
+    inputs = do_update(inputs_orig, slip[0], width[0], dip[0])
 
     model_disp_points = run_dc3d.compute_ll_def(inputs, params, disp_points)
 
@@ -39,37 +57,79 @@ def do_okada(params, slip, depth, dip):
 
     return los
 
-def my_loglike(slip, depth, dip, sigma, data):
-    for param in (slip, depth, dip, sigma, data):
+def my_loglike(slip, width, dip, sigma, data):
+    """
+    Takes parameter values, sigma, and data and evaluates loglike of Gaussian distribution
+
+    Parameters:
+    -------
+    slip: slip [m]
+
+    width: width of rectangular slip patch (i.e. top - bottom depth) [km]
+
+    dip: dip of rectangular slip patch [degrees]
+
+    sigma: uncertainty in input data
+    
+    data: array of data
+
+    Returns:
+    --------
+    loglike of Gaussian distribution
+    
+    """
+    for param in (slip, width, dip, sigma, data):
         if not isinstance(param, (float, np.ndarray)):
             raise TypeError(f"Invalid input type to loglike: {type(param)}") 
-    model = do_okada(params, slip, depth, dip)
+    model = do_okada(params, slip, width, dip)
     return -0.5 * ((data - model / sigma) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(sigma))
 
 class LogLike(Op):
 
-    def make_node(self, slip, depth, dip, sigma, data):
+    def make_node(self, slip, width, dip, sigma, data):
         slip = pt.as_tensor(slip)
-        depth = pt.as_tensor(depth)
+        width = pt.as_tensor(width)
         dip = pt.as_tensor(dip)
         sigma = pt.as_tensor(sigma)
         data = pt.as_tensor(data)
 
-        inputs = [slip, depth, dip, sigma, data]
+        inputs = [slip, width, dip, sigma, data]
         outputs = [data.type()]
 
         return Apply(self, inputs, outputs)
     
     def perform(self, node: Apply, inputs: list[np.ndarray], outputs: list[list[None]]) -> None:
-        slip, depth, dip, sigma, data = inputs
+        slip, width, dip, sigma, data = inputs
 
-        loglike_eval = my_loglike(slip, depth, dip, sigma, data)
+        loglike_eval = my_loglike(slip, width, dip, sigma, data)
 
         outputs[0][0] = np.asarray(loglike_eval)
 
-def custom_dist_loglike(data, slip, depth, dip, sigma, x):
+def custom_dist_loglike(data, slip, width, dip, sigma, x):
+    """
+    Evaluates loglike of Gaussian distribution with data and model
+
+    Parameters:
+    -------
+    data: array of input data
+
+    slip: slip [m]
+
+    width: width of rectangular slip patch (i.e. top - bottom depth) [km]
+
+    dip: dip of rectangular slip patch [degrees]
+
+    sigma: uncertainty in input data
+    
+    x: model values
+
+    Returns:
+    --------
+    loglike of Gaussian distribution
+    
+    """
     # data, or observed is always passed as the first input of CustomDist
-    return LogLike(slip, depth, dip, sigma, x, data)
+    return LogLike(slip, width, dip, sigma, x, data)
 
 if __name__ == "__main__":
 
@@ -86,14 +146,14 @@ if __name__ == "__main__":
     with pm.Model() as no_grad_model:
         slip = pm.Normal("slip", mu=0.047, sigma=0.005) #mu=mean, sigma=st dev.
         #depth = pm.Uniform("depth", lower=0.0, upper=1.0, initval=0.75)
-        depth = pm.TruncatedNormal("depth", mu=0.75, sigma=0.05, lower=0.65, upper=0.85)
+        width = pm.TruncatedNormal("width", mu=0.75, sigma=0.05, lower=0.65, upper=0.85)
         #dip = pm.Normal("dip", mu=80, sigma=5)
         dip = pm.TruncatedNormal("dip", mu=45, sigma=1, lower=30, upper=60, initval=45)
         #dip = pm.Uniform("dip", lower=75.0, upper=90.0, initval=80)
 
         # use a CustomDist with a custom logp function
         likelihood = pm.CustomDist(
-            "likelihood", slip, depth, dip, sigma, observed=data, logp=custom_dist_loglike
+            "likelihood", slip, width, dip, sigma, observed=data, logp=custom_dist_loglike
         )
 
     with no_grad_model:
