@@ -22,6 +22,7 @@ from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update
+from utils import read_json
 from pymc_visualize import plot_stats
 
 def do_okada(params, slip, width, dip):
@@ -137,25 +138,25 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    wd = "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3"
-    os.chdir(wd)
+    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_tight.json')
+    os.chdir(params['experiment_dir'])
 
-    inputs_orig = read_intxt("normal_fault_in.txt")
-    params = PyCoulomb.configure_calc.configure_stress_calculation('my_config_normal.txt')
-    disp_points = io_additionals.read_disp_points("normal_fault_disp.txt")
-    data = np.loadtxt('los_data_2000.txt')
+    inputs_orig = read_intxt(params['inputs_orig'])
+    params = PyCoulomb.configure_calc.configure_stress_calculation(params['params'])
+    disp_points = io_additionals.read_disp_points(params['disp_points'])
+    data = np.loadtxt(params['data'])
 
-    sigma = 0.2
+    sigma = params['sigma']
     #########################################################
     #########################################################
     loglike_op = LogLike()
 
     with pm.Model() as no_grad_model:
-        slip = pm.Normal("slip", mu=0.047, sigma=0.005) #mu=mean, sigma=st dev.
+        slip = pm.Normal("slip", mu=params['slip_mu'], sigma=params['slip_sigma']) #mu=mean, sigma=st dev.
         #depth = pm.Uniform("depth", lower=0.0, upper=1.0, initval=0.75)
-        width = pm.TruncatedNormal("width", mu=0.75, sigma=0.05, lower=0.65, upper=0.85)
+        width = pm.TruncatedNormal("width", mu=params['width_mu'], sigma=params['width_sigma'], lower=params['width_lower'], upper=params['wdith_upper'])
         #dip = pm.Normal("dip", mu=80, sigma=5)
-        dip = pm.TruncatedNormal("dip", mu=45, sigma=1, lower=30, upper=60, initval=45)
+        dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
         #dip = pm.Uniform("dip", lower=75.0, upper=90.0, initval=80)
 
         # use a CustomDist with a custom logp function
