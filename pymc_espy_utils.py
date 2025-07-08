@@ -5,8 +5,10 @@ import numpy as np
 from elastic_stresses_py import PyCoulomb
 from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
+from Tectonic_Utils.geodesy import insar_vector_functions
 
 def get_dU(disp_points):
+    """for testing"""
     dU = []
     #dE = []
     #dN = []
@@ -15,6 +17,12 @@ def get_dU(disp_points):
         #dN = np.append(dN, point.dN_obs)
         dU = np.append(dU, point.dU_obs)
     return dU
+
+def get_los(disp_points):
+    los = []
+    for point in disp_points:
+        los = np.append(los, insar_vector_functions.def3D_into_LOS(point.dE_obs, point.dN_obs, point.dU_obs, 190, 37))
+    return los*-1
 
 def read_intxt(input_file, mu=30e9, _lame1=30e9):
     sources, receivers = [], []
@@ -45,7 +53,7 @@ def read_intxt(input_file, mu=30e9, _lame1=30e9):
 def do_update(default_inputs, slip, depth, dip):
     internal_source = PyCoulomb.fault_slip_object.fault_slip_object.coulomb_fault_to_fault_object(default_inputs.source_object)
     internal_source[0].slip = slip
-    internal_source[0].depth = depth
+    internal_source[0].width = depth
     internal_source[0].dip = dip
 
     modified_source = PyCoulomb.fault_slip_object.fault_slip_object.fault_object_to_coulomb_fault(internal_source, 
