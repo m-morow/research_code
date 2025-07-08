@@ -105,7 +105,7 @@ class LogLike(Op):
 
         outputs[0][0] = np.asarray(loglike_eval)
 
-def custom_dist_loglike(data, slip, width, dip, sigma, x):
+def custom_dist_loglike(data, slip, width, dip, sigma):
     """
     Evaluates loglike of Gaussian distribution with data and model
 
@@ -129,7 +129,7 @@ def custom_dist_loglike(data, slip, width, dip, sigma, x):
     
     """
     # data, or observed is always passed as the first input of CustomDist
-    return LogLike(slip, width, dip, sigma, x, data)
+    return loglike_op(slip, width, dip, sigma, data)
 
 if __name__ == "__main__":
 
@@ -144,9 +144,10 @@ if __name__ == "__main__":
     disp_points = io_additionals.read_disp_points("normal_fault_disp.txt")
     data = np.loadtxt('los_data_2000.txt')
 
-    sigma = 1.0
+    sigma = 0.2
     #########################################################
     #########################################################
+    loglike_op = LogLike()
 
     with pm.Model() as no_grad_model:
         slip = pm.Normal("slip", mu=0.047, sigma=0.005) #mu=mean, sigma=st dev.
@@ -161,8 +162,6 @@ if __name__ == "__main__":
             "likelihood", slip, width, dip, sigma, observed=data, logp=custom_dist_loglike
         )
 
-    """
     with no_grad_model:
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(3000, tune=1000)
-    """
+        idata_no_grad = pm.sample(100, tune=20)
