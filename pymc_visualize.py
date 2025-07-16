@@ -10,10 +10,7 @@ from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 
 import arviz as az
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import xarray as xr
-import os
+import corner
 
 import pytensor
 import pytensor.tensor as pt
@@ -28,5 +25,17 @@ def plot_stats(pymc_model, round=3):
     az.plot_posterior(pymc_model)
     az.summary(pymc_model, round_to=round)
 
-#def plot_model():
-#    retu
+def plot_corner(pymc_model, burn_in=False):
+    chains = int(pymc_model.posterior.dims['chain'])
+    draws = int(pymc_model.posterior.dims['draw'])
+    tune = int(pymc_model.posterior.attrs['tuning_steps'])
+    if burn_in:
+        idata = pymc_model.sel(draw=slice(tune, None))
+        cnr = corner.corner(idata, divergences=True)
+        cnr.suptitle("{} draws, {} chains, {} samples per chain removed".format(draws, chains, tune))
+        plt.close()
+    else:
+        cnr = corner.corner(pymc_model, divergences=True)
+        cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
+        plt.close()
+    return cnr
