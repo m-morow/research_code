@@ -1,0 +1,44 @@
+{
+    "experiment_dir": "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3",
+    "inputs_orig": "normal_fault_in.txt",
+    "params": "my_config_50.txt",
+    "disp_points": "normal_fault_disp_50.txt",
+    "data": "los_data_50.txt",
+    "vars": ["slip", "width", "dip"],
+    "slip_mu": [
+        0.05
+    ],
+    "slip_sigma": [
+        0.005
+    ],
+    "width_mu": [
+        0.75
+    ],
+    "width_sigma": [
+        0.075
+    ],
+    "width_upper": [
+        1.25
+    ],
+    "width_lower": [
+        0.40
+    ],
+    "dip_mu": [
+        45
+    ],
+    "dip_sigma": [
+        1
+    ],
+    "dip_upper": [
+        70
+    ],
+    "dip_lower": [
+        20
+    ],
+    "dip_init": [
+        60
+    ],
+    "sigma": [
+        0.002
+    ]
+}
