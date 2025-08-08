@@ -1,6 +1,6 @@
 {
     "experiment_dir": "/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3",
-    "inputs_orig": "normal_fault_in.txt",
+    "inputs_orig": "normal_fault_50.txt",
     "params": "my_config_50.txt",
     "disp_points": "normal_fault_disp_50.txt",
     "data": "los_data_50.txt",
