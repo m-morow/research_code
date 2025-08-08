@@ -1,0 +1,19 @@
+[io-config]
+exp_name = normal_fault_50
+input_file = normal_fault_50.txt
+output_dir = ./outputs
+plot_stress = 0
+plot_grd_disp = 0
+gps_disp_points = normal_fault_disp_50.txt
+aftershocks =
+strain_file = 
+save_file_type = .png
+
+[compute-config]
+strike_num_receivers = 0
+dip_num_receivers = 0
+mu = 30000000000
+lame1 = 30000000000
+B = 0
+fixed_rake = 
+
