@@ -89,6 +89,7 @@ class LogLike(Op):
         width = pt.as_tensor(width)
         dip = pt.as_tensor(dip)
         data = pt.as_tensor(data)
+        sigma = pt.as_tensor(sigma)
 
         inputs = [slip, width, dip, sigma, data]
         outputs = [data.type()]
