@@ -21,9 +21,12 @@ from pytensor.graph import Apply, Op
 from pymc_espy_utils import get_los, read_intxt, do_update
 
 def plot_stats(pymc_model, round=3):
-    az.plot_trace(pymc_model)
-    az.plot_posterior(pymc_model)
-    az.summary(pymc_model, round_to=round)
+    fig, ax = plt.subplots(3)
+    fig.suptitle('model overview')
+    ax[0] = az.summary(pymc_model, round_to=round)
+    ax[1] = az.plot_trace(pymc_model)
+    ax[2] = az.plot_posterior(pymc_model)
+    return fig
 
 def plot_corner(pymc_model, burn_in=False):
     chains = int(pymc_model.posterior.dims['chain'])
@@ -39,3 +42,6 @@ def plot_corner(pymc_model, burn_in=False):
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
         plt.close()
     return cnr
+
+#def plot_profile(params, extent_small=False):
+    
