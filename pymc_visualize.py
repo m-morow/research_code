@@ -29,7 +29,7 @@ def plot_stats(pymc_model, round=3):
     ax[2] = az.plot_posterior(pymc_model)
     return fig
 
-def plot_corner(pymc_model, param_file, burn_in=False):
+def plot_corner(pymc_model, burn_in=False):
     chains = int(pymc_model.posterior.dims['chain'])
     draws = int(pymc_model.posterior.dims['draw'])
     tune = int(pymc_model.posterior.attrs['tuning_steps'])
@@ -39,13 +39,10 @@ def plot_corner(pymc_model, param_file, burn_in=False):
         means = idata.mean()
         cnr = corner.corner(idata, divergences=True)
         cnr.suptitle("{} draws, {} chains, {} samples per chain removed".format(draws, chains, tune))
-        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
+        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
     else:
         means = pymc_model.mean()
         cnr = corner.corner(pymc_model, divergences=True)
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
-        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
-    return cnr
-
-#def plot_profile(params, extent_small=False):
-    
+        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
+    return cnr    
