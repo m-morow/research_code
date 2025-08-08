@@ -39,12 +39,12 @@ def plot_corner(pymc_model, param_file, burn_in=False):
         means = idata.mean()
         cnr = corner.corner(idata, divergences=True)
         cnr.suptitle("{} draws, {} chains, {} samples per chain removed".format(draws, chains, tune))
-        corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
+        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
     else:
         means = pymc_model.mean()
         cnr = corner.corner(pymc_model, divergences=True)
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
-        corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
+        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
     return cnr
 
 #def plot_profile(params, extent_small=False):
