@@ -11,6 +11,7 @@ from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 import arviz as az
 import matplotlib.pyplot as plt
 import corner
+import numpy as np
 
 import pytensor
 import pytensor.tensor as pt
@@ -18,7 +19,7 @@ import pymc as pm
 from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 
 def plot_stats(pymc_model, round=3):
     fig, ax = plt.subplots(3)
@@ -28,19 +29,22 @@ def plot_stats(pymc_model, round=3):
     ax[2] = az.plot_posterior(pymc_model)
     return fig
 
-def plot_corner(pymc_model, burn_in=False):
+def plot_corner(pymc_model, param_file, burn_in=False):
     chains = int(pymc_model.posterior.dims['chain'])
     draws = int(pymc_model.posterior.dims['draw'])
     tune = int(pymc_model.posterior.attrs['tuning_steps'])
+
     if burn_in:
         idata = pymc_model.sel(draw=slice(tune, None))
+        means = idata.mean()
         cnr = corner.corner(idata, divergences=True)
         cnr.suptitle("{} draws, {} chains, {} samples per chain removed".format(draws, chains, tune))
-        plt.close()
+        corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
     else:
+        means = pymc_model.mean()
         cnr = corner.corner(pymc_model, divergences=True)
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
-        plt.close()
+        corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="blue")
     return cnr
 
 #def plot_profile(params, extent_small=False):
