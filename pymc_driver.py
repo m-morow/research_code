@@ -88,6 +88,7 @@ class LogLike(Op):
         slip = pt.as_tensor(slip)
         width = pt.as_tensor(width)
         dip = pt.as_tensor(dip)
+        data = pt.as_tensor(data)
 
         inputs = [slip, width, dip, sigma, data]
         outputs = [data.type()]
@@ -133,8 +134,8 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json')
-    #params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json')
+    #params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json')
+    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json')
     os.chdir(params['experiment_dir'])
 
     inputs_orig = read_intxt(params['inputs_orig'])
@@ -158,8 +159,8 @@ if __name__ == "__main__":
         # dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
         
         # uniform priors
-        slip = pm.Uniform("slip", lower=0.01, upper=0.06, initval=0.045)
-        width = pm.Uniform("width", lower=0.05, upper=1.5, initval=0.75)
+        slip = pm.Uniform("slip", lower=0.01, upper=0.06, initval=0.03)
+        width = pm.Uniform("width", lower=0.05, upper=1.5, initval=0.5)
         dip = pm.Uniform("dip", lower=5.0, upper=90.0, initval=80)
 
         # use a CustomDist with a custom logp function
@@ -171,7 +172,7 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=1000, tune=500, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=2000, tune=1000, step=step, return_inferencedata=True)
         #idata_no_grad.extend(pm.sample_posterior_predictive(idata_no_grad, random_seed=RANDOM_SEED))
 
     
