@@ -136,13 +136,16 @@ if __name__ == "__main__":
     # really important, set globals once before running !!  #
     #########################################################
     #params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json')
-    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json')
+    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json')
     os.chdir(params['experiment_dir'])
 
     inputs_orig = read_intxt(params['inputs_orig'])
     params_in = PyCoulomb.configure_calc.configure_stress_calculation(params['params'])
-    disp_points = io_additionals.read_disp_points(params['disp_points'])
-    data = np.loadtxt(params['data'])
+    #disp_points = io_additionals.read_disp_points(params['disp_points'])
+    data_all = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/data_all_103.txt'
+    disp_points = io_additionals.read_disp_points(data_all)
+    #data = np.loadtxt(params['data'])
+    data = np.loadtxt(data_all, usecols=2)
 
     sigma = params['sigma']
     #########################################################
@@ -157,12 +160,12 @@ if __name__ == "__main__":
         # priors
         # slip = pm.Normal("slip", mu=params['slip_mu'], sigma=params['slip_sigma']) #mu=mean, sigma=st dev.
         # width = pm.TruncatedNormal("width", mu=params['width_mu'], sigma=params['width_sigma'], lower=params['width_lower'], upper=params['width_upper'])
-        # dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
+        dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
         
         # uniform priors
-        slip = pm.Uniform("slip", lower=0.01, upper=0.06, initval=0.03)
-        width = pm.Uniform("width", lower=0.05, upper=1.5, initval=0.5)
-        dip = pm.Uniform("dip", lower=5.0, upper=90.0, initval=80)
+        slip = pm.Uniform("slip", lower=0.005, upper=0.06, initval=0.03)
+        width = pm.Uniform("width", lower=0.05, upper=2.5, initval=1)
+        #dip = pm.Uniform("dip", lower=10, upper=45.0, initval=32)
 
         # use a CustomDist with a custom logp function
         likelihood = pm.CustomDist(
@@ -173,7 +176,7 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=2000, tune=1000, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=4000, tune=2000, step=step, return_inferencedata=True)
         #idata_no_grad.extend(pm.sample_posterior_predictive(idata_no_grad, random_seed=RANDOM_SEED))
 
     
@@ -181,3 +184,6 @@ if __name__ == "__main__":
     plot_stats(idata_no_grad) # plots trace, posterior, and summary table
 
     plot_corner(idata_no_grad, burn_in=True) # plots corner plots
+
+    #save_model = os.path.join(params["experiment_dir"], "results")
+    #save_pymc_model(idata_no_grad, save_model + "/model_109.nc")
