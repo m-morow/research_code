@@ -8,6 +8,9 @@ from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
 from Tectonic_Utils.geodesy import insar_vector_functions
 
+import arviz as az
+import pymc as pm
+
 def get_dU(disp_points):
     """for testing"""
     dU = []
@@ -113,3 +116,7 @@ def read_json(file):
     params = json.load(f)
     f.close()
     return params
+
+def save_pymc_model(model, location):
+    model.to_netcdf(location)
+    print("Model saved: \n{} \nlocation: {}".format(str(model), str(location)))
