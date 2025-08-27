@@ -12,6 +12,7 @@ import arviz as az
 import matplotlib.pyplot as plt
 import corner
 import numpy as np
+import os
 
 import pytensor
 import pytensor.tensor as pt
@@ -20,6 +21,7 @@ from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
+from pymc_driver import do_okada
 
 def plot_stats(pymc_model, round=3):
     fig, ax = plt.subplots(3)
@@ -46,3 +48,25 @@ def plot_corner(pymc_model, burn_in=False):
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
         cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
     return cnr    
+
+def plot_okada(json_params, pymc_model, stdev_hi, stdev_lo):
+    params = read_json(json_params)
+    os.chdir(params['experiment_dir'])
+
+    inputs_orig = read_intxt(params['inputs_orig'])
+    params_in = PyCoulomb.configure_calc.configure_stress_calculation(params['params'])
+    disp_points = io_additionals.read_disp_points(params['disp_points'])
+
+    sigma = params['sigma']
+    dip_mean = np.mean(az.convert_to_dataset(pymc_model)['dip'])
+    width_mean = np.mean(az.convert_to_dataset(pymc_model)['width'])
+    slip_mean = np.mean(az.convert_to_dataset(pymc_model)['slip'])
+
+    los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
+
+    lonpt = np.loadtxt('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/disp_pt_109.txt', usecols=0)
+    data = np.loadtxt('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/los_data_109.txt', usecols=0)
+    plt.plot(lonpt, los, label='pymc fit', c='red')
+    plt.scatter(lonpt, data, c='k')
+    plt.legend(loc='best')
+    plt.show()
