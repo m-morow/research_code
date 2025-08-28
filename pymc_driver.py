@@ -20,7 +20,7 @@ import pymc as pm
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
-from pymc_visualize import plot_stats, plot_corner, plot_okada
+from pymc_visualize import plot_stats, plot_corner, set_up_okada
 
 def do_okada(slip, width, dip, m, x, b):
     """
@@ -140,8 +140,9 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
+    json = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json'
     #params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json')
-    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json')
+    params = read_json(json)
     os.chdir(params['experiment_dir'])
 
     inputs_orig = read_intxt(params['inputs_orig'])
@@ -185,19 +186,33 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=2000, tune=100, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=2000, tune=1000, step=step, return_inferencedata=True)
         #idata_no_grad.extend(pm.sample_posterior_predictive(idata_no_grad, random_seed=RANDOM_SEED))
 
     
     # visualize model results
     plot_stats(idata_no_grad) # plots trace, posterior, and summary table
 
-    plot_corner(idata_no_grad, burn_in=True) # plots corner plots
+    #plot_corner(idata_no_grad, burn_in=True) # plots corner plots
 
+    d, w, s = set_up_okada(json, idata_no_grad)
+
+    a = np.zeros(109)
+    m = m+1
+    los = do_okada(np.array([s]), np.array([w]), np.array([d]), m=m, x=a, b=a)
+
+"""
     lon = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/disp_pt_109.txt'
 
-    ax = plot_okada(params, idata_no_grad, lon, data)
+    dip_mean = np.mean(az.convert_to_dataset(idata_no_grad)['dip'])
+    width_mean = np.mean(az.convert_to_dataset(idata_no_grad)['width'])
+    slip_mean = np.mean(az.convert_to_dataset(idata_no_grad)['slip'])
+
+    los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
+
+    ax = plot_okada(params, idata_no_grad, los, lon, data)
     ax.show()
 
     #save_model = os.path.join(params["experiment_dir"], "results")
     #save_pymc_model(idata_no_grad, save_model + "/model_109.nc")
+"""
