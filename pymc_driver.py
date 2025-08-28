@@ -20,7 +20,7 @@ import pymc as pm
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
-from pymc_visualize import plot_stats, plot_corner
+from pymc_visualize import plot_stats, plot_corner, plot_okada
 
 def do_okada(slip, width, dip, m, x, b):
     """
@@ -195,8 +195,9 @@ if __name__ == "__main__":
     plot_corner(idata_no_grad, burn_in=True) # plots corner plots
 
     lon = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/disp_pt_109.txt'
-    
-    plot_okada(params, idata_no_grad, lon, data)
+
+    ax = plot_okada(params, idata_no_grad, lon, data)
+    ax.show()
 
     #save_model = os.path.join(params["experiment_dir"], "results")
     #save_pymc_model(idata_no_grad, save_model + "/model_109.nc")
