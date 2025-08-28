@@ -21,7 +21,7 @@ from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
-from pymc_driver import do_okada
+#from pymc_driver import do_okada
 
 def plot_stats(pymc_model, round=3):
     fig, ax = plt.subplots(3)
@@ -49,7 +49,7 @@ def plot_corner(pymc_model, burn_in=False):
         cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
     return cnr    
 
-def plot_okada(json_params, pymc_model, lon, data):
+def set_up_okada(json_params, pymc_model):
     params = read_json(json_params)
     os.chdir(params['experiment_dir'])
 
@@ -65,12 +65,14 @@ def plot_okada(json_params, pymc_model, lon, data):
     width_mean = np.mean(az.convert_to_dataset(pymc_model)['width'])
     slip_mean = np.mean(az.convert_to_dataset(pymc_model)['slip'])
 
-    los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
-
+    #los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
+    """
     lonpt = np.loadtxt(lon, usecols=0)
     
     fig, ax = plt.subplots()
-    ax.plot(lonpt, los, label='pymc fit', c='red')
-    ax.scatter(lonpt, data, c='k')
-    ax.legend(loc='best')
-    return ax
+    plt.plot(lonpt, los, label='pymc fit', c='red')
+    plt.scatter(lonpt, data, c='k')
+    plt.legend(loc='best')
+    return fig
+    """
+    return dip_mean, width_mean, slip_mean
