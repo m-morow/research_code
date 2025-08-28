@@ -22,7 +22,7 @@ from pytensor.graph import Apply, Op
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 from pymc_visualize import plot_stats, plot_corner
 
-def do_okada(slip, width, dip):
+def do_okada(slip, width, dip, m, x, b):
     """
     Perform Okada dislocation of a rectangular slip patch with slip, width, dip
 
@@ -41,6 +41,8 @@ def do_okada(slip, width, dip):
     """
     inputs = do_update(inputs_orig, slip[0], width[0], dip[0])
 
+    x = [pt.lon for pt in disp_points]
+
     model_disp_points = run_dc3d.compute_ll_def(inputs, params_in, disp_points)
 
     MyOutObject = cc.Out_object(x=[], y=[], x2d=[], y2d=[], u_disp=[], v_disp=[], w_disp=[],
@@ -52,9 +54,9 @@ def do_okada(slip, width, dip):
 
     los = get_los(MyOutObject.model_disp_points)
 
-    return los
+    return los + (m*x + b)
 
-def my_loglike(slip, width, dip, sigma, data):
+def my_loglike(slip, width, dip, m, x, b, sigma, data):
     """
     Takes parameter values, sigma, and data and evaluates loglike of Gaussian distribution
 
@@ -75,38 +77,41 @@ def my_loglike(slip, width, dip, sigma, data):
     loglike of Gaussian distribution
     
     """
-    for param in (slip, width, dip, sigma, data):
+    for param in (slip, width, dip, m, x, b, sigma, data):
         if not isinstance(param, (float, np.ndarray)):
             raise TypeError(f"Invalid input type to loglike: {type(param)}") 
-    model = do_okada(slip, width, dip)
+    model = do_okada(slip, width, dip, m, x, b)
     #return -0.5 * ((data - model) / sigma) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(sigma)
     return -(0.5/sigma**2)*np.sum((data - model)**2) #eq. 5.1 Menke textbook
 
 class LogLike(Op):
 
-    def make_node(self, slip, width, dip, sigma, data) -> Apply:
+    def make_node(self, slip, width, dip, m, x, b, sigma, data) -> Apply:
         slip = pt.as_tensor(slip)
         width = pt.as_tensor(width)
         dip = pt.as_tensor(dip)
+        m = pt.as_tensor(m)
+        x = pt.as_tensor(x)
+        b = pt.as_tensor(b)
         data = pt.as_tensor(data)
         sigma = pt.as_tensor(sigma)
 
-        inputs = [slip, width, dip, sigma, data]
+        inputs = [slip, width, dip, m, x, b, sigma, data]
         outputs = [data.type()]
 
         return Apply(self, inputs, outputs)
     
     def perform(self, node: Apply, inputs: list[np.ndarray], outputs: list[list[None]]) -> None:
-        slip, width, dip, sigma, data = inputs
+        slip, width, dip, m, x, b, sigma, data = inputs
 
-        loglike_eval = my_loglike(slip, width, dip, sigma, data)
+        loglike_eval = my_loglike(slip, width, dip, m, x, b, sigma, data)
 
         outputs[0][0] = np.asarray(loglike_eval)
 
 def gauss_draw(slip, width, dip, size=None):
         return np.random.Generator.random(slip, width, dip, size = size)
 
-def custom_dist_loglike(data, slip, width, dip, sigma):
+def custom_dist_loglike(data, slip, width, dip, m, x, b, sigma):
     """
     Evaluates loglike of Gaussian distribution with data and model
 
@@ -128,7 +133,7 @@ def custom_dist_loglike(data, slip, width, dip, sigma):
     
     """
     # data, or observed is always passed as the first input of CustomDist
-    return loglike_op(slip, width, dip, sigma, data)
+    return loglike_op(slip, width, dip, m, x, b, sigma, data)
 
 if __name__ == "__main__":
 
@@ -136,16 +141,17 @@ if __name__ == "__main__":
     # really important, set globals once before running !!  #
     #########################################################
     #params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json')
-    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json')
+    params = read_json('/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json')
     os.chdir(params['experiment_dir'])
 
     inputs_orig = read_intxt(params['inputs_orig'])
     params_in = PyCoulomb.configure_calc.configure_stress_calculation(params['params'])
-    #disp_points = io_additionals.read_disp_points(params['disp_points'])
-    data_all = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/data_all_103.txt'
-    disp_points = io_additionals.read_disp_points(data_all)
-    #data = np.loadtxt(params['data'])
-    data = np.loadtxt(data_all, usecols=2)
+    disp_points = io_additionals.read_disp_points(params['disp_points'])
+    #data_all = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/data_all_103.txt'
+    data = np.loadtxt(params['data'])
+    #data = np.loadtxt(data_all, usecols=2)
+    #x = np.loadtxt(data_all, usecols=0)
+    x = np.loadtxt(params['disp_points'], usecols=0)
 
     sigma = params['sigma']
     #########################################################
@@ -160,23 +166,26 @@ if __name__ == "__main__":
         # priors
         # slip = pm.Normal("slip", mu=params['slip_mu'], sigma=params['slip_sigma']) #mu=mean, sigma=st dev.
         # width = pm.TruncatedNormal("width", mu=params['width_mu'], sigma=params['width_sigma'], lower=params['width_lower'], upper=params['width_upper'])
-        dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
+        #dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
         
         # uniform priors
-        slip = pm.Uniform("slip", lower=0.005, upper=0.06, initval=0.03)
+        slip = pm.Uniform("slip", lower=0.015, upper=0.05, initval=0.03)
         width = pm.Uniform("width", lower=0.05, upper=2.5, initval=1)
-        #dip = pm.Uniform("dip", lower=10, upper=45.0, initval=32)
+        dip = pm.Uniform("dip", lower=30, upper=90.0, initval=60)
+
+        m = pm.Normal("slope", 0, sigma=20)
+        b = pm.Normal("intercept", 0, sigma=20)
 
         # use a CustomDist with a custom logp function
         likelihood = pm.CustomDist(
-            "likelihood", slip, width, dip, sigma, size=len(data), observed=data, logp=custom_dist_loglike, random=gauss_draw
+            "likelihood", slip, width, dip, m, x, b, sigma, size=len(data), observed=data, logp=custom_dist_loglike
         )
 
     # run model
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=4000, tune=2000, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=2000, tune=100, step=step, return_inferencedata=True)
         #idata_no_grad.extend(pm.sample_posterior_predictive(idata_no_grad, random_seed=RANDOM_SEED))
 
     
@@ -184,6 +193,10 @@ if __name__ == "__main__":
     plot_stats(idata_no_grad) # plots trace, posterior, and summary table
 
     plot_corner(idata_no_grad, burn_in=True) # plots corner plots
+
+    lon = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/disp_pt_109.txt'
+    
+    plot_okada(params, idata_no_grad, lon, data)
 
     #save_model = os.path.join(params["experiment_dir"], "results")
     #save_pymc_model(idata_no_grad, save_model + "/model_109.nc")
