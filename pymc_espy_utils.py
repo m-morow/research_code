@@ -106,6 +106,9 @@ def do_update(default_inputs, slip, width, dip):
     internal_source[0].width = width
     internal_source[0].dip = dip
 
+    #lons, lats = internal_source[0].get_four_corners_lon_lat()
+    #print(lons, lats)
+
     modified_source = PyCoulomb.fault_slip_object.fault_slip_object.fault_object_to_coulomb_fault(internal_source, 
                                                                                 zerolon_system=default_inputs.zerolon, 
                                                                                 zerolat_system=default_inputs.zerolat)
