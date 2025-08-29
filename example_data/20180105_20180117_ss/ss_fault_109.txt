@@ -1,0 +1,6 @@
+# Source: strike rake dip length_km width_km lon lat depth_km slip_m (opt: tensile_m)
+# Receivers: strike rake dip length width updip_corner_lon updip_corner_lat updip_corner_dep
+# General: PR1 FRIC lon_min lon_max lon_zero lat_min lat_max lat_zero
+
+General: 0.250 0.400 -115.600000 -115.200000 -115.300000 32.600000 33.000000 32.800000
+Source_Patch: 323.000 180.000 80.000 7.000 3.000 -115.440693 32.770927 0.0 0.075000
