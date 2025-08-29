@@ -108,6 +108,18 @@ def sort(subset):
         
     return lons, lats, names
 
+def sort_and_pad(subset):
+    sorted = np.sort(subset)
+    pad = np.sqrt( (sorted[0] - sorted[1])**2 + (sorted[3] - sorted[2])**2 )
+    pad = 0.05
+    if subset[0] < subset[1]:
+        xs = [subset[0], subset[1]]
+        ys = [subset[2], subset[3]]
+    else:
+        xs = [subset[1], subset[0]]
+        ys = [subset[3], subset[2]]
+    return xs, ys, [sorted[0] - pad, sorted[1] + pad, sorted[2] - pad, sorted[3] + pad]
+
 def plot_profiles_gmt(grid_file, isce_file, ploc, ploc_idx, title, outfile=True):
     fig = pygmt.Figure()
     pygmt.config(FORMAT_GEO_MAP='ddd.xx') # decimal degrees
