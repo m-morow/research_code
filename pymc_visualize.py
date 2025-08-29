@@ -59,6 +59,9 @@ def set_up_okada(json_params, pymc_model):
     width_mean = np.mean(az.convert_to_dataset(pymc_model)['width'])
     slip_mean = np.mean(az.convert_to_dataset(pymc_model)['slip'])
 
+    slope_mean = np.mean(az.convert_to_dataset(pymc_model)['slope'])
+    b_mean = np.mean(az.convert_to_dataset(pymc_model)['intercept'])
+
     #los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
     """
     lonpt = np.loadtxt(lon, usecols=0)
@@ -69,4 +72,4 @@ def set_up_okada(json_params, pymc_model):
     plt.legend(loc='best')
     return fig
     """
-    return dip_mean, width_mean, slip_mean
+    return dip_mean, width_mean, slip_mean, slope_mean, b_mean
