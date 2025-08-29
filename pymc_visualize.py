@@ -53,12 +53,6 @@ def set_up_okada(json_params, pymc_model):
     params = read_json(json_params)
     os.chdir(params['experiment_dir'])
 
-    inputs_orig = read_intxt(params['inputs_orig'])
-    params_in = PyCoulomb.configure_calc.configure_stress_calculation(params['params'])
-    disp_points = io_additionals.read_disp_points(params['disp_points'])
-
-    sigma = params['sigma']
-
     print(az.summary(pymc_model))
 
     dip_mean = np.mean(az.convert_to_dataset(pymc_model)['dip'])
