@@ -1,0 +1,19 @@
+[io-config]
+exp_name = test
+input_file = ss_fault_in.txt
+output_dir = ./outputs
+plot_stress = 0
+plot_grd_disp = 1
+gps_disp_points = disp_pt_109.txt
+aftershocks = CA_aftershocks_2014.txt
+strain_file = 
+save_file_type = .png
+
+[compute-config]
+strike_num_receivers = 0
+dip_num_receivers = 0
+mu = 30000000000
+lame1 = 30000000000
+B = 0
+fixed_rake = 
+
