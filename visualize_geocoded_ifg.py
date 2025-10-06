@@ -9,7 +9,7 @@ import json
 plt.rcParams["font.family"] = "Arial"
 plt.rcParams['axes.linewidth'] = 1
 
-def do_fig1(params, ifg):
+def do_fig1(params, ifg, colormap):
     
     xarray, yarray, data = isce_read_write.read_scalar_data(params['file'], verbose=False) #I suppress print functions
 
@@ -17,7 +17,7 @@ def do_fig1(params, ifg):
 
     fig, ax = plt.subplots(figsize=[8, 8], dpi=300)
 
-    ax.imshow(data_bbox, cmap='viridis', extent=params['extent'])
+    ax.imshow(data_bbox, cmap=colormap, extent=params['extent'])
     plt.xlabel("longitude", fontsize=10)
     plt.ylabel("latitude", fontsize=10)
     plt.tick_params(axis='both', which='major', labelsize=8, width=1)
@@ -36,7 +36,7 @@ def do_fig1(params, ifg):
 
     return
 
-def do_fig2(params, ifg):
+def do_fig2(params, ifg, colormap):
 
     xarray, yarray, data = isce_read_write.read_scalar_data(params['file'], verbose=False)
 
@@ -56,7 +56,7 @@ def do_fig2(params, ifg):
     creepmeter.plot(ax=ax, c='white', markersize=25, edgecolor='black', linewidth=0.5, marker="^", zorder=15)
     gps.plot(ax=ax, c='white', markersize=30, marker=".", edgecolor='black', linewidth=0.5, zorder=15)
 
-    ax.imshow(data_bbox, cmap='viridis', extent=params['extent'])
+    ax.imshow(data_bbox, cmap=colormap, extent=params['extent'])
     plt.xlabel("longitude", fontsize=10)
     plt.ylabel("latitude", fontsize=10)
     plt.tick_params(axis='both', which='major', labelsize=8, width=1)
