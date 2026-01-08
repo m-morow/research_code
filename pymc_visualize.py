@@ -101,7 +101,7 @@ def test_plot_los_model(los, data, x, textbox, outfile):
         x_m = np.append(x_m, (x_prof-x[0])*deg2m)
     
     fig, ax = plt.subplots()
-    plt.xlabel('distance along profile [km]')
+    plt.xlabel('distance along profile [m]')
     plt.ylabel('LOS displacement [cm]')
     plt.scatter(x_m, data*100, label='data')
     plt.plot(x_m, los*100, label='model')
