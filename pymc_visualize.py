@@ -64,13 +64,13 @@ def set_up_okada(pymc_model, data):
     b_linear = np.zeros(len(data)) + float(b_const.mean())
 
     #slope, int, slip, width, dip
-    means = np.array(az.summary(pymc_model)['mean'])[2:]
+    #means = np.array(az.summary(pymc_model)['mean'])[2:]
     sds = np.array(az.summary(pymc_model)['mean'])[2:]
 
     text1 = r'{:<6}'.format('$slip$') + \
         r'$=\, {} \pm {}$'.format(means[0], sds[0]) + r'{}'.format(' cm')
     text2 = r'{:<6}'.format('$width$') + \
-        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' km')
+        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' m')
     text3 = r'{:<6}'.format('$dip$') + \
         r'$=\, {} \pm {}$'.format(means[2], sds[2]) + r'{}'.format(' deg')
     text = text1 + '\n' + text2 + '\n' + text3
@@ -78,7 +78,7 @@ def set_up_okada(pymc_model, data):
     print("====== mean ======")
     print("dip = ", d_mean, "width = ", w_mean, "slip = ", s_mean, "m = ", slope_mean, "b = ", b_mean)
 
-    return d_mean, w_mean, s_mean, slope, b_linear, means, sds, text
+    return d_mean, w_mean, s_mean, slope, b_linear, sds, text
 
 def plot_los_model(los, data, x, outfile):
     deg2m = 40075*1000 * np.cos(np.deg2rad(32)) / 360 #quick conversion
@@ -94,25 +94,23 @@ def plot_los_model(los, data, x, outfile):
     print('saved LOS model to {}'.format(outfile))
     return x_meters
 
-def test_plot_los_model(los, data, x, stats, uncert, outfile):
-    deg2km = 40075*1* np.cos(np.deg2rad(32)) / 360 #quick conversion
-    x_km = []
+def test_plot_los_model(los, data, x, textbox, outfile):
+    deg2m = 40075*1000* np.cos(np.deg2rad(32)) / 360 #quick conversion
+    x_m = []
     for x_prof in x:
-        x_km = np.append(x_km, (x_prof-x[0])*deg2km)
+        x_m = np.append(x_m, (x_prof-x[0])*deg2m)
     
     fig, ax = plt.subplots()
     plt.xlabel('distance along profile [km]')
     plt.ylabel('LOS displacement [cm]')
-    plt.scatter(x_km, data*100, label='data')
-    plt.plot(x_km, los*100, label='model')
+    plt.scatter(x_m, data*100, label='data')
+    plt.plot(x_m, los*100, label='model')
     #plt.legend(loc='best')
-    if stats:
-        _, _, text = uncertainties(stats)
+    if textbox:
+        #_, _, text = uncertainties(stats)
         props = dict(boxstyle='round', facecolor='lightblue', alpha=0.5)
         # place a text box in upper left in axes coords
         ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, verticalalignment='top', bbox=props)
-    if uncert:
-       pymc_driver.do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None): 
     if outfile:
         plt.savefig(outfile)
     print('saved LOS model to {}'.format(outfile))
