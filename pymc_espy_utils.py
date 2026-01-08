@@ -134,18 +134,3 @@ def calc_stress_drop(pymc_models, mu):
         dTau = s_mean * mu / (2 * w_mean) #[m*kPa / m]
         dTaus = np.append(dTaus, dTau)
     return dTaus
-
-def uncertainties(pymc_model):
-    #slope, int, slip, width, dip
-    means = np.array(az.summary(pymc_model)['mean'])[2:]
-    sds = np.array(az.summary(pymc_model)['mean'])[2:]
-
-    text1 = r'{:<6}'.format('$slip$') + \
-        r'$=\, {} \pm {}$'.format(means[0], sds[0]) + r'{}'.format(' cm')
-    text2 = r'{:<6}'.format('$width$') + \
-        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' km')
-    text3 = r'{:<6}'.format('$dip$') + \
-        r'$=\, {} \pm {}$'.format(means[2], sds[2]) + r'{}'.format(' deg')
-    text = text1 + '\n' + text2 + '\n' + text3
-
-    return means, sds, text
