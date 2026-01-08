@@ -20,7 +20,7 @@ import pymc as pm
 from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update, read_json, uncertainties
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 import pymc_driver
 
 def plot_posterior(pymc_model, outfile=None):
@@ -30,10 +30,15 @@ def plot_posterior(pymc_model, outfile=None):
         plt.savefig(outfile)
         print('saved posterior plot to {}'.format(outfile))
 
-def plot_corner(pymc_model, burn_in=False, outfile=None):
-    chains = int(pymc_model.posterior.dims['chain'])
-    draws = int(pymc_model.posterior.dims['draw'])
-    tune = int(pymc_model.posterior.attrs['tuning_steps'])
+def plot_corner(pymc_model, posterior=True, burn_in=False, outfile=None):
+    if posterior is True:
+        chains = int(pymc_model.posterior.dims['chain'])
+        draws = int(pymc_model.posterior.dims['draw'])
+        tune = int(pymc_model.posterior.attrs['tuning_steps'])
+    else:
+        chains = 999
+        draws = 999
+        tune = 0
 
     if burn_in:
         idata = pymc_model.sel(draw=slice(tune, None))
@@ -60,19 +65,19 @@ def set_up_okada(pymc_model, data):
     slope_mean = np.mean(az.convert_to_dataset(pymc_model)['slope'])
     b_mean = np.mean(az.convert_to_dataset(pymc_model)['intercept'])
 
-    slope = np.zeros(len(data)) + float(slope_m.mean())
-    b_linear = np.zeros(len(data)) + float(b_const.mean())
+    slope = np.zeros(len(data)) + float(slope_mean)
+    b_linear = np.zeros(len(data)) + float(b_mean)
 
     #slope, int, slip, width, dip
     #means = np.array(az.summary(pymc_model)['mean'])[2:]
     sds = np.array(az.summary(pymc_model)['mean'])[2:]
 
     text1 = r'{:<6}'.format('$slip$') + \
-        r'$=\, {} \pm {}$'.format(means[0], sds[0]) + r'{}'.format(' cm')
+        r'$=\, {} \pm {}$'.format(round(float(s_mean), 3), sds[0]) + r'{}'.format(' cm')
     text2 = r'{:<6}'.format('$width$') + \
-        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' m')
+        r'$=\, {} \pm {}$'.format(round(float(w_mean), 3), sds[1]) + r'{}'.format(' m')
     text3 = r'{:<6}'.format('$dip$') + \
-        r'$=\, {} \pm {}$'.format(means[2], sds[2]) + r'{}'.format(' deg')
+        r'$=\, {} \pm {}$'.format(round(float(d_mean), 3), sds[2]) + r'{}'.format(' deg')
     text = text1 + '\n' + text2 + '\n' + text3
 
     print("====== mean ======")
@@ -110,8 +115,8 @@ def test_plot_los_model(los, data, x, textbox, outfile):
         #_, _, text = uncertainties(stats)
         props = dict(boxstyle='round', facecolor='lightblue', alpha=0.5)
         # place a text box in upper left in axes coords
-        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, verticalalignment='top', bbox=props)
+        ax.text(0.05, 0.95, textbox, transform=ax.transAxes, fontsize=8, verticalalignment='top', bbox=props)
     if outfile:
         plt.savefig(outfile)
     print('saved LOS model to {}'.format(outfile))
-    return x_km
+    return x_m
