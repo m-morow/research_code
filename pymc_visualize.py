@@ -20,56 +20,88 @@ import pymc as pm
 from pymc import HalfCauchy, Model, Normal, sample
 from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update, read_json
-#from pymc_driver import do_okada
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json, uncertainties
+import pymc_driver
 
-def plot_stats(pymc_model, round=3):
-    fig, ax = plt.subplots(3)
-    fig.suptitle('model overview')
-    ax[0] = az.summary(pymc_model, round_to=round)
-    ax[1] = az.plot_trace(pymc_model)
-    ax[2] = az.plot_posterior(pymc_model)
-    return fig
+def plot_posterior(pymc_model, outfile=None):
+    fig, ax = plt.subplots()
+    ax = az.plot_posterior(pymc_model)
+    if outfile:
+        plt.savefig(outfile)
+        print('saved posterior plot to {}'.format(outfile))
 
-def plot_corner(pymc_model, burn_in=False):
+def plot_corner(pymc_model, burn_in=False, outfile=None):
     chains = int(pymc_model.posterior.dims['chain'])
     draws = int(pymc_model.posterior.dims['draw'])
     tune = int(pymc_model.posterior.attrs['tuning_steps'])
 
     if burn_in:
         idata = pymc_model.sel(draw=slice(tune, None))
-        means = idata.mean()
+        #means = idata.mean()
         cnr = corner.corner(idata, divergences=True)
         cnr.suptitle("{} draws, {} chains, {} samples per chain removed".format(draws, chains, tune))
-        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
+        #cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
     else:
-        means = pymc_model.mean()
+        #means = pymc_model.mean()
         cnr = corner.corner(pymc_model, divergences=True)
         cnr.suptitle("{} draws, {} chains, 0 samples per chain removed".format(draws, chains))
-        cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
-    return cnr    
+        #cnr = corner.overplot_lines(cnr, [means.posterior["slip"], means.posterior["width"], means.posterior["dip"]], color="#71A8C4")
+    if outfile:
+        plt.savefig(outfile)
+        print('saved corner plot to {}'.format(outfile))   
 
-def set_up_okada(json_params, pymc_model):
-    params = read_json(json_params)
-    os.chdir(params['experiment_dir'])
-
+def set_up_okada(pymc_model, data):
     print(az.summary(pymc_model))
 
-    dip_mean = np.mean(az.convert_to_dataset(pymc_model)['dip'])
-    width_mean = np.mean(az.convert_to_dataset(pymc_model)['width'])
-    slip_mean = np.mean(az.convert_to_dataset(pymc_model)['slip'])
+    d_mean = np.mean(az.convert_to_dataset(pymc_model)['dip'])
+    w_mean = np.mean(az.convert_to_dataset(pymc_model)['width'])
+    s_mean = np.mean(az.convert_to_dataset(pymc_model)['slip'])
 
     slope_mean = np.mean(az.convert_to_dataset(pymc_model)['slope'])
     b_mean = np.mean(az.convert_to_dataset(pymc_model)['intercept'])
 
-    #los = do_okada(np.array([slip_mean]), np.array([width_mean]), np.array([dip_mean]), m=1, x=disp_points, b=0)
-    """
-    lonpt = np.loadtxt(lon, usecols=0)
+    slope = np.zeros(len(data)) + float(slope_m.mean())
+    b_linear = np.zeros(len(data)) + float(b_const.mean())
+
+    print("====== mean ======")
+    print("dip = ", d_mean, "width = ", w_mean, "slip = ", s_mean, "m = ", slope_mean, "b = ", b_mean)
+
+    return d_mean, w_mean, s_mean, slope, b_linear
+
+def plot_los_model(los, data, x, outfile):
+    deg2m = 40075*1000 * np.cos(np.deg2rad(32)) / 360 #quick conversion
+    x_meters = []
+    for x_prof in x:
+        x_meters = np.append(x_meters, (x_prof-x[0])*deg2m)
+    
+    plt.xlabel('distance along profile [m]')
+    plt.ylabel('LOS displacement [cm]')
+    plt.plot(x_meters, los*100, label='pymc fit')
+    plt.scatter(x_meters, data*100, label='data')
+    plt.savefig(outfile)
+    print('saved LOS model to {}'.format(outfile))
+    return x_meters
+
+def test_plot_los_model(los, data, x, stats, uncert, outfile):
+    deg2km = 40075*1* np.cos(np.deg2rad(32)) / 360 #quick conversion
+    x_km = []
+    for x_prof in x:
+        x_km = np.append(x_km, (x_prof-x[0])*deg2km)
     
     fig, ax = plt.subplots()
-    plt.plot(lonpt, los, label='pymc fit', c='red')
-    plt.scatter(lonpt, data, c='k')
-    plt.legend(loc='best')
-    return fig
-    """
-    return dip_mean, width_mean, slip_mean, slope_mean, b_mean
+    plt.xlabel('distance along profile [km]')
+    plt.ylabel('LOS displacement [cm]')
+    plt.scatter(x_km, data*100, label='data')
+    plt.plot(x_km, los*100, label='model')
+    #plt.legend(loc='best')
+    if stats:
+        _, _, text = uncertainties(stats)
+        props = dict(boxstyle='round', facecolor='lightblue', alpha=0.5)
+        # place a text box in upper left in axes coords
+        ax.text(0.05, 0.95, text, transform=ax.transAxes, fontsize=8, verticalalignment='top', bbox=props)
+    if uncert:
+       pymc_driver.do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None): 
+    if outfile:
+        plt.savefig(outfile)
+    print('saved LOS model to {}'.format(outfile))
+    return x_km
