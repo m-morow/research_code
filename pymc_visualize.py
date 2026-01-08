@@ -63,10 +63,22 @@ def set_up_okada(pymc_model, data):
     slope = np.zeros(len(data)) + float(slope_m.mean())
     b_linear = np.zeros(len(data)) + float(b_const.mean())
 
+    #slope, int, slip, width, dip
+    means = np.array(az.summary(pymc_model)['mean'])[2:]
+    sds = np.array(az.summary(pymc_model)['mean'])[2:]
+
+    text1 = r'{:<6}'.format('$slip$') + \
+        r'$=\, {} \pm {}$'.format(means[0], sds[0]) + r'{}'.format(' cm')
+    text2 = r'{:<6}'.format('$width$') + \
+        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' km')
+    text3 = r'{:<6}'.format('$dip$') + \
+        r'$=\, {} \pm {}$'.format(means[2], sds[2]) + r'{}'.format(' deg')
+    text = text1 + '\n' + text2 + '\n' + text3
+
     print("====== mean ======")
     print("dip = ", d_mean, "width = ", w_mean, "slip = ", s_mean, "m = ", slope_mean, "b = ", b_mean)
 
-    return d_mean, w_mean, s_mean, slope, b_linear
+    return d_mean, w_mean, s_mean, slope, b_linear, means, sds, text
 
 def plot_los_model(los, data, x, outfile):
     deg2m = 40075*1000 * np.cos(np.deg2rad(32)) / 360 #quick conversion
