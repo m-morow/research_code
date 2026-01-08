@@ -21,7 +21,7 @@ import pymc as pm
 from pytensor.graph import Apply, Op
 
 import pymc_espy_utils
-from pymc_espy_utils import get_los, read_intxt, do_update, read_json, uncertainties
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 import pymc_visualize
 
 def do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None):
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    run_name = 'model_9'
+    run_name = 'model_9b_test'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json'
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=2000, tune=2000, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=1000, tune=1000, step=step, return_inferencedata=True)
 
     # save model results
     save_model = os.path.join(params["experiment_dir"], "results/{}".format(run_name))
