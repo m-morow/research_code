@@ -9,6 +9,7 @@ from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
 from Tectonic_Utils.geodesy import insar_vector_functions
 
 import arviz as az
+from arviz import from_netcdf
 import pymc as pm
 
 def get_dU(disp_points):
@@ -123,3 +124,28 @@ def read_json(file):
 def save_pymc_model(model, location):
     model.to_netcdf(location)
     print("Model saved: \n{} \nlocation: {}".format(str(model), str(location)))
+
+def calc_stress_drop(pymc_models, mu):
+    dTaus = []
+    for model in pymc_models:
+        loaded_model = from_netcdf(model)
+        w_mean = np.mean(az.convert_to_dataset(loaded_model)['width'])*1000 #km-->m
+        s_mean = np.mean(az.convert_to_dataset(loaded_model)['slip'])
+        dTau = s_mean * mu / (2 * w_mean) #[m*kPa / m]
+        dTaus = np.append(dTaus, dTau)
+    return dTaus
+
+def uncertainties(pymc_model):
+    #slope, int, slip, width, dip
+    means = np.array(az.summary(pymc_model)['mean'])[2:]
+    sds = np.array(az.summary(pymc_model)['mean'])[2:]
+
+    text1 = r'{:<6}'.format('$slip$') + \
+        r'$=\, {} \pm {}$'.format(means[0], sds[0]) + r'{}'.format(' cm')
+    text2 = r'{:<6}'.format('$width$') + \
+        r'$=\, {} \pm {}$'.format(means[1], sds[1]) + r'{}'.format(' km')
+    text3 = r'{:<6}'.format('$dip$') + \
+        r'$=\, {} \pm {}$'.format(means[2], sds[2]) + r'{}'.format(' deg')
+    text = text1 + '\n' + text2 + '\n' + text3
+
+    return means, sds, text
