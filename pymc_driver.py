@@ -20,7 +20,8 @@ import pytensor.tensor as pt
 import pymc as pm
 from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update, read_json
+import pymc_espy_utils
+from pymc_espy_utils import get_los, read_intxt, do_update, read_json, uncertainties
 import pymc_visualize
 
 def do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None):
@@ -135,8 +136,14 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
+    run_name = 'model_9'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json'
-    js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20231217_20231229/pymc_params_rakechange.json'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20190629_20190711/pymc_params.json'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/yuha/pymc_params_mod3.json'
+    js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20150708_20150801/pymc_params.json'
     params = read_json(js)
     os.chdir(params['experiment_dir'])
 
@@ -162,9 +169,9 @@ if __name__ == "__main__":
         #dip = pm.TruncatedNormal("dip", mu=params['dip_mu'], sigma=params['dip_sigma'], lower=params['dip_lower'], upper=params['dip_upper'], initval=params['dip_init'])
         
         # uniform priors
-        slip = pm.Uniform("slip", lower=0.015, upper=0.05, initval=0.03)
-        width = pm.Uniform("width", lower=0.05, upper=2.5, initval=1)
-        dip = pm.Uniform("dip", lower=30, upper=90.0, initval=60)
+        slip = pm.Uniform("slip", lower=0.005, upper=0.08, initval=0.055)
+        width = pm.Uniform("width", lower=0.01, upper=4, initval=2.5)
+        dip = pm.Uniform("dip", lower=0, upper=90.0, initval=45)
 
         m = pm.Normal("slope", 0, sigma=20)
         b = pm.Normal("intercept", 0, sigma=20)
@@ -178,34 +185,31 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=200, tune=200, step=step, return_inferencedata=True)
-
-    d, w, s, slope_m, b_const = pymc_visualize.set_up_okada(js, idata_no_grad)
-    print("====== mean ======")
-    print("dip = ", d, "width = ", w, "slip = ", s, "m = ", slope_m, "b = ", b_const)
-
-    slope = np.zeros(50) + float(slope_m.mean())
-    b_linear = np.zeros(50) + float(b_const.mean())
-    los = do_okada(np.array([s]), np.array([w]), np.array([d]), slope, x, b_linear, inputs_orig)
-    print("====== LOS array ======")
-    pprint.pprint(los)
-
-    deg2m = 40075*1000 * np.cos(np.deg2rad(32)) / 360 #quick conversion
-    x_meters = []
-    for x_prof in x:
-        x_meters = np.append(x_meters, (x_prof-x[0])*deg2m)
-    
-    plt.plot(x_meters, los, label='pymc fit')
-    plt.scatter(x_meters, data, label='data')
-    plt.savefig('/Users/mata7085/Desktop/test_los.png')
-
-    # visualize model results
-    #pymc_visualize.plot_stats(idata_no_grad) # plots trace, posterior, and summary table
-
-    #pymc_visualize.plot_corner(idata_no_grad, burn_in=False) # plots corner plots
-
-    #pymc_visualize.set_up_okada(js, idata_no_grad)
+        idata_no_grad = pm.sample(draws=2000, tune=2000, step=step, return_inferencedata=True)
 
     # save model results
-    #save_model = os.path.join(params["experiment_dir"], "results")
-    #save_pymc_model(idata_no_grad, save_model + "/model_109.nc")
+    save_model = os.path.join(params["experiment_dir"], "results/{}".format(run_name))
+    if not os.path.exists(save_model):
+        os.makedirs(save_model)
+
+    pymc_espy_utils.save_pymc_model(idata_no_grad, save_model + "/{}.nc".format(run_name))
+ 
+    d, w, s, slope, b_linear, sds, text = pymc_visualize.set_up_okada(idata_no_grad, data)
+
+    los = do_okada(np.array([s]), np.array([w]), np.array([d]), slope, x, b_linear, inputs_orig)
+
+    save_los = save_model + '/los_model.txt'
+
+    #los_meters = pymc_visualize.plot_los_model(los, data, x, save_model+'/los_model.png')
+    los_meters = pymc_visualize.plot_los_model(los, data, x, text, save_model+'/los_model.png')
+
+    with open(save_los, 'w') as file:
+        for los_point in range(len(los)):
+            file.write(f'{los_meters[los_point]}\t{los[los_point]}\n')
+
+    # visualize model results
+    pymc_visualize.plot_posterior(idata_no_grad, outfile=save_model+'/stats.png') # plots trace, posterior, and summary table
+
+    pymc_visualize.plot_corner(idata_no_grad, burn_in=False, outfile=save_model+'/corner.png') # plots corner plots
+
+    #pymc_visualize.set_up_okada(js, idata_no_grad)
