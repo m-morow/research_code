@@ -12,6 +12,7 @@ from cmcrameri import cm
 import utils
 import geopandas as gp
 import pygmt
+import scipy as sp
 
 def connect_points(ploc):
     lat0, lat1, lon0, lon1 = ploc[:, 3], ploc[:, 4], ploc[:, 5], ploc[:, 6]
@@ -119,6 +120,51 @@ def sort_and_pad(subset):
         xs = [subset[1], subset[0]]
         ys = [subset[3], subset[2]]
     return xs, ys, [sorted[0] - pad, sorted[1] + pad, sorted[2] - pad, sorted[3] + pad]
+
+def find_nearest(array, value):
+    """this is pretty fast, for a 4000 element array = ~seconds"""
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx, array[idx]
+
+def profile_setup_isce(isce_file, extent, profile_file, profile_num, interp_points):
+    _, ext = os.path.splitext(isce_file)
+    if ext == '.unw':
+        xarray, yarray, data = isce_read_write.read_isce_unw_geo(isce_file)
+    else:
+        xarray, yarray, data = isce_read_write.read_scalar_data(isce_file)
+    x_arr, y_arr, data_bbox = grid_tools.clip_array_by_bbox(xarray, yarray, data, extent, verbose=False)
+
+    profile_loc = pd.read_csv(profile_file, header=0)
+    ploc = np.array(profile_loc)
+
+    lon_start, lon_st = find_nearest(x_arr, ploc[profile_num][6])
+    lon_end, lon_en = find_nearest(x_arr, ploc[profile_num][5])
+    lat_start, lat_st = find_nearest(y_arr, ploc[profile_num][4])
+    lat_end, lat_en = find_nearest(y_arr, ploc[profile_num][3])
+
+    x_interp = np.linspace(lon_start, lon_end, int(interp_points))
+    y_interp = np.linspace(lat_start, lat_end, int(interp_points))
+
+    zi = sp.ndimage.map_coordinates(data_bbox, np.vstack((y_interp, x_interp)))
+    return zi, data_bbox, lon_st, lat_st, lon_en, lat_en
+
+def plot_profile_isce(zi, data_bbox, lon_st, lat_st, lon_en, lat_en, extent):
+    fig = plt.figure(figsize=[12, 8], dpi=200)
+    ax1 = plt.subplot2grid((3,2), (0,0), colspan=2, rowspan=2)
+    ax2 = plt.subplot2grid((3,2), (2,0))
+
+    im = ax1.imshow(data_bbox, cmap=cm.batlow, extent=extent)
+    plt.colorbar(im, orientation='vertical', ax=ax1, label='disp [cm]')
+
+    ax1.plot((lon_st, lon_en), (lat_st, lat_en), color='white')
+   
+    ax2.scatter(np.arange(0, len(zi), 1), zi[::-1])
+    ax2.plot(np.arange(0, len(zi), 1), zi[::-1])
+
+    ax2.set_xlabel('sample # (evenly spaced interpolation)')
+    ax2.set_ylabel('disp [cm]')
+    return
 
 def plot_profiles_gmt(grid_file, isce_file, ploc, ploc_idx, title, outfile=True):
     fig = pygmt.Figure()
