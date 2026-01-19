@@ -8,14 +8,14 @@ from elastic_stresses_py.PyCoulomb.disp_points_object.disp_points_object import 
 from elastic_stresses_py.PyCoulomb import utilities, io_additionals, run_dc3d, run_mogi, conversion_math
 from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 
-import arviz as az
-import matplotlib.pyplot as plt
+#import arviz as az
+#import matplotlib.pyplot as plt
 import numpy as np
 import os
-from typing import Optional, Tuple
-import pprint
+#from typing import Optional, Tuple
+#import pprint
 
-import pytensor
+#import pytensor
 import pytensor.tensor as pt
 import pymc as pm
 from pytensor.graph import Apply, Op
@@ -24,7 +24,7 @@ import pymc_espy_utils
 from pymc_espy_utils import get_los, read_intxt, do_update, read_json
 import pymc_visualize
 
-def do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None):
+def do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, plat="uav", inputs=None):
     """
     Perform Okada dislocation of a rectangular slip patch with slip, width, dip
 
@@ -47,7 +47,7 @@ def do_okada(slip_ok, width_ok, dip_ok, m_ok, x_ok, b_ok, inputs=None):
 
     model_disp_points_ok = run_dc3d.compute_ll_def(inputs, params_in, disp_points)
 
-    los_ok = get_los(model_disp_points_ok)
+    los_ok = get_los(model_disp_points_ok, plat)
     #pprint.pprint(los_ok)
 
     return los_ok + (m_ok*x_ok + b_ok)
@@ -76,7 +76,7 @@ def my_loglike(slip_ll, width_ll, dip_ll, m_ll, x_ll, b_ll, sigma_ll, data_ll):
     for param in (slip_ll, width_ll, dip_ll, m_ll, x_ll, b_ll, sigma_ll, data_ll):
         if not isinstance(param, (float, np.ndarray)):
             raise TypeError(f"Invalid input type to loglike: {type(param)}") 
-    model = do_okada(slip_ll, width_ll, dip_ll, m_ll, x_ll, b_ll)
+    model = do_okada(slip_ll, width_ll, dip_ll, m_ll, x_ll, b_ll, plat="uav")
     #return -0.5 * ((data - model) / sigma) ** 2 - np.log(np.sqrt(2 * np.pi)) - np.log(sigma)
     return -(0.5/sigma_ll**2)*np.sum((data_ll - model)**2) #eq. 5.1 Menke textbook
 
@@ -136,14 +136,15 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    run_name = 'model_4'
+    run_name = 'model_2'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20231217_20231229/pymc_params_rakechange.json'
-    js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20190629_20190711/IF/pymc_params.json'
+    #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20190629_20190711/IF/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/yuha/pymc_params_mod3.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20150708_20150801/pymc_params.json'
+    js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Data/IF_longterm/creep_event_files/yuha/uavsar/pymc/pymc_params.json'
     params = read_json(js)
     os.chdir(params['experiment_dir'])
 
@@ -196,7 +197,7 @@ if __name__ == "__main__":
  
     d, w, s, slope, b_linear, sds, text = pymc_visualize.set_up_okada(idata_no_grad, data)
 
-    los = do_okada(np.array([s]), np.array([w]), np.array([d]), slope, x, b_linear, inputs_orig)
+    los = do_okada(np.array([s]), np.array([w]), np.array([d]), slope, x, b_linear, inputs=inputs_orig, plat="uav")
 
     save_los = save_model + '/los_model.txt'
 
