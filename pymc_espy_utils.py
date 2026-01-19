@@ -45,8 +45,8 @@ def get_los(disp_points, platform):
         azi = 12
         inc = 37
     elif platform == 'uav':
-        azi = 95
-        inc = 30
+        azi = -95
+        inc = 60
     else:
         print("defaulting to s1d geometry...")
     los = []
