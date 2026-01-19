@@ -10,7 +10,7 @@ from Tectonic_Utils.geodesy import insar_vector_functions
 
 import arviz as az
 from arviz import from_netcdf
-import pymc as pm
+#import pymc as pm
 
 def get_dU(disp_points):
     """for testing"""
@@ -23,7 +23,7 @@ def get_dU(disp_points):
         dU = np.append(dU, point.dU_obs)
     return dU
 
-def get_los(disp_points):
+def get_los(disp_points, platform):
     """
     Function takes in elastic_stresses_py displacement object and returns line of sight displacement
 
@@ -31,14 +31,27 @@ def get_los(disp_points):
     -------
     disp_points: elastic_stresses_py displacement object
 
+    platform: s1d (sentinel-1 descending), s1a (sentinel-1 ascending), uav (uavsar)
+
     Returns:
     --------
     los data vector * [-1]
     
     """
+    if platform == 's1d':
+        azi = 190
+        inc = 37
+    elif platform == 's1a':
+        azi = 12
+        inc = 37
+    elif platform == 'uav':
+        azi = 95
+        inc = 30
+    else:
+        print("defaulting to s1d geometry...")
     los = []
     for point in disp_points:
-        los = np.append(los, insar_vector_functions.def3D_into_LOS(point.dE_obs, point.dN_obs, point.dU_obs, 190, 37))
+        los = np.append(los, insar_vector_functions.def3D_into_LOS(point.dE_obs, point.dN_obs, point.dU_obs, azi, inc))
     return los*-1
 
 def read_intxt(input_file, mu=30e9, _lame1=30e9):
