@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 
-from elastic_stresses_py import PyCoulomb
-from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
-from elastic_stresses_py.PyCoulomb.fault_slip_triangle import triangle_okada
-from elastic_stresses_py.PyCoulomb.point_source_object import point_sources
-from elastic_stresses_py.PyCoulomb.disp_points_object.disp_points_object import Displacement_points
-from elastic_stresses_py.PyCoulomb import utilities, io_additionals, run_dc3d, run_mogi, conversion_math
-from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
+# from elastic_stresses_py import PyCoulomb
+# from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
+# from elastic_stresses_py.PyCoulomb.fault_slip_triangle import triangle_okada
+# from elastic_stresses_py.PyCoulomb.point_source_object import point_sources
+# from elastic_stresses_py.PyCoulomb.disp_points_object.disp_points_object import Displacement_points
+# from elastic_stresses_py.PyCoulomb import utilities, io_additionals, run_dc3d, run_mogi, conversion_math
+# from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 
 import arviz as az
 import matplotlib.pyplot as plt
 import corner
 import numpy as np
-import os
+#import os
 
-import pytensor
-import pytensor.tensor as pt
-import pymc as pm
-from pymc import HalfCauchy, Model, Normal, sample
-from pytensor.graph import Apply, Op
+#import pytensor
+#import pytensor.tensor as pt
+#import pymc as pm
+#from pymc import HalfCauchy, Model, Normal, sample
+#from pytensor.graph import Apply, Op
 
-from pymc_espy_utils import get_los, read_intxt, do_update, read_json
-import pymc_driver
+#from pymc_espy_utils import get_los, read_intxt, do_update, read_json
+#import pymc_driver
 
 def plot_posterior(pymc_model, outfile=None):
     fig, ax = plt.subplots()
@@ -73,9 +73,9 @@ def set_up_okada(pymc_model, data):
     sds = np.array(az.summary(pymc_model)['mean'])[2:]
 
     text1 = r'{:<6}'.format('$slip$') + \
-        r'$=\, {} \pm {}$'.format(round(float(s_mean), 3), sds[0]) + r'{}'.format(' cm')
+        r'$=\, {} \pm {}$'.format(round(float(s_mean), 3), sds[0]) + r'{}'.format(' m')
     text2 = r'{:<6}'.format('$width$') + \
-        r'$=\, {} \pm {}$'.format(round(float(w_mean), 3), sds[1]) + r'{}'.format(' m')
+        r'$=\, {} \pm {}$'.format(round(float(w_mean), 3), sds[1]) + r'{}'.format(' km')
     text3 = r'{:<6}'.format('$dip$') + \
         r'$=\, {} \pm {}$'.format(round(float(d_mean), 3), sds[2]) + r'{}'.format(' deg')
     text = text1 + '\n' + text2 + '\n' + text3
