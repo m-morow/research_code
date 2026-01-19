@@ -6,7 +6,7 @@ import json
 from elastic_stresses_py import PyCoulomb
 from elastic_stresses_py.PyCoulomb.inputs_object import io_intxt
 from elastic_stresses_py.PyCoulomb import coulomb_collections as cc
-from Tectonic_Utils.geodesy import insar_vector_functions
+from tectonic_utils.geodesy import insar_vector_functions
 
 import arviz as az
 from arviz import from_netcdf
