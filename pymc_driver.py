@@ -136,7 +136,7 @@ if __name__ == "__main__":
     #########################################################
     # really important, set globals once before running !!  #
     #########################################################
-    run_name = 'model_2'
+    run_name = 'model_5_60degdipMax_10kmDepthMax'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20240203_20240215/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/20180105_20180117/pymc_params.json'
     #js = '/Users/mata7085/Library/CloudStorage/OneDrive-UCB-O365/Documents/IF_longterm/codes/experiment2/pymc_tests/test3/pymc_params_synth_50disp.json'
@@ -171,8 +171,8 @@ if __name__ == "__main__":
         
         # uniform priors
         slip = pm.Uniform("slip", lower=0.005, upper=0.08, initval=0.055)
-        width = pm.Uniform("width", lower=0.01, upper=5, initval=3)
-        dip = pm.Uniform("dip", lower=0, upper=90.0, initval=45)
+        width = pm.Uniform("width", lower=0.01, upper=10, initval=5)
+        dip = pm.Uniform("dip", lower=0, upper=60.0, initval=30)
 
         m = pm.Normal("slope", 0, sigma=20)
         b = pm.Normal("intercept", 0, sigma=20)
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     with no_grad_model:
         step = pm.Metropolis() # specify step
         # Use custom number of draws to replace the HMC based defaults
-        idata_no_grad = pm.sample(draws=2000, tune=2000, step=step, return_inferencedata=True)
+        idata_no_grad = pm.sample(draws=2000, tune=1000, step=step, return_inferencedata=True)
 
     # save model results
     save_model = os.path.join(params["experiment_dir"], "results/{}".format(run_name))
@@ -201,8 +201,7 @@ if __name__ == "__main__":
 
     save_los = save_model + '/los_model.txt'
 
-    #los_meters = pymc_visualize.plot_los_model(los, data, x, save_model+'/los_model.png')
-    los_meters = pymc_visualize.test_plot_los_model(los, data, x, text, save_model+'/los_model.png')
+    los_meters = pymc_visualize.plot_los_model(los, data, x, text, outfile=save_model+'/los_model.png', during=True)
 
     with open(save_los, 'w') as file:
         for los_point in range(len(los)):
@@ -212,5 +211,3 @@ if __name__ == "__main__":
     pymc_visualize.plot_posterior(idata_no_grad, outfile=save_model+'/stats.png') # plots trace, posterior, and summary table
 
     pymc_visualize.plot_corner(idata_no_grad, posterior=True, burn_in=False, outfile=save_model+'/corner.png') # plots corner plots
-
-    #pymc_visualize.set_up_okada(js, idata_no_grad)
