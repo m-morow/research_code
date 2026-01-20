@@ -70,7 +70,7 @@ def set_up_okada(pymc_model, data):
 
     #slope, int, slip, width, dip
     #means = np.array(az.summary(pymc_model)['mean'])[2:]
-    sds = np.array(az.summary(pymc_model)['mean'])[2:]
+    sds = np.array(az.summary(pymc_model)['sd'])[2:]
 
     text1 = r'{:<6}'.format('$slip$') + \
         r'$=\, {} \pm {}$'.format(round(float(s_mean), 3), sds[0]) + r'{}'.format(' m')
@@ -85,38 +85,27 @@ def set_up_okada(pymc_model, data):
 
     return d_mean, w_mean, s_mean, slope, b_linear, sds, text
 
-def plot_los_model(los, data, x, outfile):
-    deg2m = 40075*1000 * np.cos(np.deg2rad(32)) / 360 #quick conversion
-    x_meters = []
-    for x_prof in x:
-        x_meters = np.append(x_meters, (x_prof-x[0])*deg2m)
-    
-    plt.xlabel('distance along profile [m]')
-    plt.ylabel('LOS displacement [cm]')
-    plt.plot(x_meters, los*100, label='pymc fit')
-    plt.scatter(x_meters, data*100, label='data')
-    plt.savefig(outfile)
-    print('saved LOS model to {}'.format(outfile))
-    return x_meters
-
-def test_plot_los_model(los, data, x, textbox, outfile):
-    deg2m = 40075*1000* np.cos(np.deg2rad(32)) / 360 #quick conversion
-    x_m = []
-    for x_prof in x:
-        x_m = np.append(x_m, (x_prof-x[0])*deg2m)
+def plot_los_model(los, data, x, textbox, outfile, during=True):
+    if during:
+        deg2m = 40075*1000* np.cos(np.deg2rad(32)) / 360 #quick conversion
+        x_m = []
+        for x_prof in x:
+            x_m = np.append(x_m, (x_prof-x[0])*deg2m)
+    else:
+        x_m = x
     
     fig, ax = plt.subplots()
     plt.xlabel('distance along profile [m]')
     plt.ylabel('LOS displacement [cm]')
-    plt.scatter(x_m, data*100, label='data')
-    plt.plot(x_m, los*100, label='model')
-    #plt.legend(loc='best')
+    plt.scatter(x_m, data*100, label='data', alpha=0.75)
+    plt.plot(x_m, los*100, label='model', c='black')
+
     if textbox:
-        #_, _, text = uncertainties(stats)
         props = dict(boxstyle='round', facecolor='lightblue', alpha=0.5)
         # place a text box in upper left in axes coords
         ax.text(0.05, 0.95, textbox, transform=ax.transAxes, fontsize=8, verticalalignment='top', bbox=props)
     if outfile:
         plt.savefig(outfile)
-    print('saved LOS model to {}'.format(outfile))
+        print('saved LOS model to {}'.format(outfile))
+    
     return x_m
